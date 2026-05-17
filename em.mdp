@@ -1,0 +1,30 @@
+; Energy Minimization (em.mdp)
+define          = -DFLEXIBLE       ; Apply flexibility (e.g., flexible water)
+integrator      = steep            ; Algorithm: steepest descent minimization
+emtol           = 10               ; Stop minimization when max force < 10 kJ/mol/nm
+emstep          = 0.01             ; Minimization step size
+nsteps          = 50000            ; Maximum number of minimization steps
+
+; Neighbor Searching
+nstlist         = 10               ; Update the neighbor list every 10 steps
+ns_type         = grid             ; Search grid cells for neighbors
+cutoff-scheme   = Verlet           ; Use Verlet for buffered neighbor searching
+
+; Non-bonded Interactions
+rlist           = 1.2              ; Neighbor list cutoff
+rcoulomb        = 1.2              ; Short-range electrostatic cutoff
+coulombtype     = PME              ; Particle Mesh Ewald for accurate electrostatics
+fourierspacing  = 0.12             ; Grid spacing for PME
+rvdw            = 1.2              ; Short-range van der Waals cutoff
+vdw-modifier    = Force-switch     ; Smooth switching of van der Waals interactions
+
+; Constraints
+constraints     = none             ; No constraints during minimization
+
+; Temperature & Pressure
+Tcoupl          = no               ; No temperature coupling
+Pcoupl          = no               ; No pressure coupling
+
+; Velocity Generation
+gen_vel         = no               ; No velocity generation
+

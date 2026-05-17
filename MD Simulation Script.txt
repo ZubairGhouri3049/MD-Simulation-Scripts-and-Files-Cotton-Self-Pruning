@@ -1,0 +1,106 @@
+#############################################
+# Molecular Dynamics Simulation Pipeline
+# GROMACS Standard Workflow
+#############################################
+
+############################
+# STEP 1: Topology Setup
+############################
+
+gmx pdb2gmx -f input.pdb -o processed.gro -p topol.top -ignh
+
+# Select appropriate force field and water model during prompt
+
+############################
+# STEP 2: Define Box
+############################
+
+gmx editconf -f processed.gro -o boxed.gro -c -d 1.0 -bt cubic
+
+############################
+# STEP 3: Solvation
+############################
+
+gmx solvate -cp boxed.gro -cs spc216.gro -o solvated.gro -p topol.top
+
+############################
+# STEP 4: Ion Addition (Preparation)
+############################
+
+gmx grompp -f ions.mdp -c solvated.gro -p topol.top -o ions.tpr
+
+############################
+# STEP 5: Neutralization
+############################
+
+gmx genion -s ions.tpr -o solvated_ions.gro -p topol.top -pname NA -nname CL -neutral
+
+# Select SOL group when prompted
+
+############################
+# STEP 6: Energy Minimization
+############################
+
+gmx grompp -f em.mdp -c solvated_ions.gro -p topol.top -o em.tpr
+
+gmx mdrun -v -deffnm em
+
+############################
+# STEP 7: NVT Equilibration
+############################
+
+gmx grompp -f nvt.mdp -c em.gro -r em.gro -p topol.top -o nvt.tpr
+
+gmx mdrun -v -deffnm nvt
+
+############################
+# STEP 8: NPT Equilibration
+############################
+
+gmx grompp -f npt.mdp -c nvt.gro -r nvt.gro -p topol.top -o npt.tpr
+
+gmx mdrun -v -deffnm npt
+
+############################
+# STEP 9: Production MD
+############################
+
+gmx grompp -f md.mdp -c npt.gro -p topol.top -o md.tpr
+
+gmx mdrun -v -deffnm md
+
+#############################################
+# POST-SIMULATION ANALYSIS
+#############################################
+
+############################
+# RMSD
+############################
+
+gmx rms -s md.tpr -f md.xtc -o rmsd.xvg -tu ns
+
+############################
+# Index File (for H-bonds)
+############################
+
+gmx make_ndx -f md.tpr -o index.ndx
+
+# Select:
+# 1 (Protein)
+# 1 (Protein) or required groups
+
+############################
+# Hydrogen Bonds (Count)
+############################
+
+gmx hbond -s md.tpr -f md.xtc -n index.ndx -num hbond.xvg
+
+############################
+# Hydrogen Bond Distance
+############################
+
+gmx hbond -s md.tpr -f md.xtc -n index.ndx -dist hbond_dist.xvg
+
+#############################################
+# END OF SIMULATION PIPELINE
+#############################################
